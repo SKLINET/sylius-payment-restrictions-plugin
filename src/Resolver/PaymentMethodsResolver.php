@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace ThreeBRS\SyliusPaymentRestrictionPlugin\PaymentResolver;
+namespace ThreeBRS\SyliusPaymentRestrictionPlugin\Resolver;
 
 use Sylius\Component\Core\Model\ChannelInterface;
 use Sylius\Component\Core\Model\OrderInterface;
@@ -20,30 +20,37 @@ class PaymentMethodsResolver implements PaymentMethodsResolverInterface
 
     /** @var ThreeBRSSyliusResolvePaymentMethodForOrder */
     private $paymentOrderResolver;
+	/**
+	 * @var PaymentMethodsResolverInterface
+	 */
+	private $decorated;
 
-    public function __construct(
+	public function __construct(
+	    PaymentMethodsResolverInterface $decorated,
         PaymentMethodRepositoryInterface $paymentMethodRepository,
         ThreeBRSSyliusResolvePaymentMethodForOrder $paymentOrderResolver
     ) {
-        $this->paymentMethodRepository = $paymentMethodRepository;
+		$this->decorated = $decorated;
+		$this->paymentMethodRepository = $paymentMethodRepository;
         $this->paymentOrderResolver = $paymentOrderResolver;
-    }
+	}
 
     /**
      * @inheritdoc
      */
     public function getSupportedMethods(BasePaymentInterface $payment): array
     {
-        \assert($payment instanceof PaymentInterface);
+	    $enabledForChannel = $this->decorated->getSupportedMethods($payment);
+		//
+	    Assert::isInstanceOf($payment, PaymentInterface::class);
         Assert::true($this->supports($payment), 'This payment method is not support by resolver');
 
         $order = $payment->getOrder();
-        \assert($order instanceof OrderInterface);
+		Assert::isInstanceOf($order, OrderInterface::class);
 
         $channel = $order->getChannel();
-        \assert($channel instanceof ChannelInterface);
+	    Assert::isInstanceOf($channel, ChannelInterface::class);
 
-        $enabledForChannel = $this->paymentMethodRepository->findEnabledForChannel($channel);
         $result = [];
         foreach ($enabledForChannel as $paymentMethod) {
             if ($this->paymentOrderResolver->isEligible($paymentMethod, $order)) {

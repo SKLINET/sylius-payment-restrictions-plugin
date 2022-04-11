@@ -14,5 +14,6 @@ docker-compose.yaml
 /bin-docker/
 /deploy/
 /docker/
+composer.phar
 
 yarn-error.log

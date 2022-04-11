@@ -8,16 +8,16 @@ services:
         arguments:
             $zoneMatcher: '@sylius.zone_matcher'
 
-    ThreeBRS\SyliusPaymentRestrictionPlugin\PaymentResolver\PaymentMethodsResolver:
-        tags:
-            - name: "sylius.payment_method_resolver"
-              type: "channel_based"
-              label: "sylius.payment_methods_resolver.channel_based"
-              priority: 100
+    # Payment Method resolver
+    threebrs.sylius_payment_restriction_plugin.payment.resolver.payment_methods_resolver:
+        class: ThreeBRS\SyliusPaymentRestrictionPlugin\Resolver\PaymentMethodsResolver
+        decorates: 'sylius.payment_methods_resolver.channel_based'
+        decoration_priority: 256
         arguments:
+            $decorated: '@.inner' # pass the old service as an argument
             $paymentMethodRepository: '@sylius.repository.payment_method'
             $paymentOrderResolver: '@ThreeBRS\SyliusPaymentRestrictionPlugin\Model\ThreeBRSSyliusResolvePaymentMethodForOrder'
-
+    # Form extension
     ThreeBRS\SyliusPaymentRestrictionPlugin\Form\Extension\RestrictionPaymentMethodExtension:
         tags:
             - extended_type: Sylius\Bundle\PaymentBundle\Form\Type\PaymentMethodType
